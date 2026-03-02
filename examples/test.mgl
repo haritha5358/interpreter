@@ -1,0 +1,14 @@
+namaskaram
+
+iduka x = 7
+
+sathyamano x < 3 ?
+    ezhutuka "Big"
+
+athava x < 5 ?
+    ezhutuka "Medium"
+
+athava ?
+    ezhutuka "Small"
+
+nanni
