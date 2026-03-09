@@ -1,6 +1,3 @@
-# parser.py
-
-
 class ParserError(Exception):
     pass
 
@@ -13,8 +10,6 @@ class Parser:
         self.pos = 0
         self.current = self.tokens[self.pos]
 
-
-    # ---------------- UTILITY ---------------- #
 
     def advance(self):
 
@@ -30,16 +25,11 @@ class Parser:
 
             if value is None or self.current.value == value:
                 self.advance()
-
             else:
-                self.error(
-                    f"Expected {value}, got {self.current.value}"
-                )
+                self.error(f"Expected {value}")
 
         else:
-            self.error(
-                f"Expected {token_type}, got {self.current.type}"
-            )
+            self.error(f"Expected {token_type}")
 
 
     def error(self, msg):
@@ -47,59 +37,38 @@ class Parser:
         raise ParserError("Syntax Error: " + msg)
 
 
-    # ---------------- MAIN ---------------- #
-
     def parse(self):
-
-        # program -> ENTRY statements EXIT
 
         self.eat("KEYWORD", "ENTRY")
 
         self.skip_newlines()
 
-
         while self.current.value != "EXIT":
-
             self.statement()
             self.skip_newlines()
 
-
         self.eat("KEYWORD", "EXIT")
 
-        # ✅ FIX: Skip blank lines before EOF
         self.skip_newlines()
 
         self.eat("EOF")
 
-        print("✅ Parsing Successful!")
+        print("✅ Parsing Successful")
 
-
-    # ---------------- STATEMENTS ---------------- #
 
     def statement(self):
 
-        if self.current.value == "LET":
-            self.let_statement()
-
-        elif self.current.value == "PRINT":
+        if self.current.type == "KEYWORD" and self.current.value == "PRINT":
             self.print_statement()
 
-        elif self.current.value == "IF":
-            self.if_statement()
+        elif self.current.type == "IDENTIFIER":
+            self.assignment()
 
         else:
-            self.error(
-                f"Invalid statement near '{self.current.value}'"
-            )
+            self.error("Invalid statement")
 
 
-    # ---------------- LET ---------------- #
-
-    def let_statement(self):
-
-        # LET id = expr
-
-        self.eat("KEYWORD", "LET")
+    def assignment(self):
 
         self.eat("IDENTIFIER")
 
@@ -108,99 +77,54 @@ class Parser:
         self.expression()
 
 
-    # ---------------- PRINT ---------------- #
-
     def print_statement(self):
-
-        # PRINT expr
 
         self.eat("KEYWORD", "PRINT")
 
-        self.expression()
-
-
-    # ---------------- IF / ELSE / ELSE-IF ---------------- #
-
-    def if_statement(self):
-
-        # IF condition ?
-        self.eat("KEYWORD", "IF")
-
-        self.condition()
-
-        self.eat("OPERATOR", "?")
-
-        self.skip_newlines()
-
-
-        # IF body (single statement)
-        self.statement()
-
-        self.skip_newlines()
-
-
-        # ELSE / ELSE IF
-        while self.current.type == "KEYWORD" and self.current.value == "ELSE":
-
-            self.eat("KEYWORD", "ELSE")
-
-
-            # ELSE IF
-            if self.current.type != "OPERATOR" or self.current.value != "?":
-
-                self.condition()
-
-                self.eat("OPERATOR", "?")
-
-                self.skip_newlines()
-
-                self.statement()
-
-                self.skip_newlines()
-
-
-            # ELSE
-            else:
-
-                self.eat("OPERATOR", "?")
-
-                self.skip_newlines()
-
-                self.statement()
-
-                self.skip_newlines()
-
-
-    # ---------------- CONDITION ---------------- #
-
-    def condition(self):
-
-        # expr OP expr
+        self.eat("OPERATOR", "(")
 
         self.expression()
 
-        if self.current.type != "OPERATOR":
-            self.error("Expected comparison operator")
+        self.eat("OPERATOR", ")")
 
-        self.advance()
-
-        self.expression()
-
-
-    # ---------------- EXPRESSIONS ---------------- #
 
     def expression(self):
 
-        if self.current.type in ["IDENTIFIER", "NUMBER", "STRING"]:
+        self.term()
+
+        while self.current.value in ["+", "-"]:
+            self.advance()
+            self.term()
+
+
+    def term(self):
+
+        self.factor()
+
+        while self.current.value in ["*", "/"]:
+            self.advance()
+            self.factor()
+
+
+    def factor(self):
+
+        if self.current.type in ["NUMBER", "STRING", "IDENTIFIER"]:
             self.advance()
 
+        elif self.current.type == "KEYWORD" and self.current.value == "INPUT":
+
+            self.advance()
+
+            self.eat("OPERATOR", "(")
+
+            if self.current.type == "STRING":
+                self.advance()
+
+            self.eat("OPERATOR", ")")
+
         else:
-            self.error(
-                f"Invalid expression near '{self.current.value}'"
-            )
+            self.error("Invalid expression")
 
-
-    # ---------------- HELPERS ---------------- #
 
     def skip_newlines(self):
 

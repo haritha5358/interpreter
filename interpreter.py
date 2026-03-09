@@ -1,6 +1,3 @@
-# interpreter.py
-
-
 class Interpreter:
 
     def __init__(self, tokens):
@@ -9,11 +6,8 @@ class Interpreter:
         self.pos = 0
         self.current = self.tokens[self.pos]
 
-        # Variable storage
         self.variables = {}
 
-
-    # ---------------- UTILITY ---------------- #
 
     def advance(self):
 
@@ -29,168 +23,136 @@ class Interpreter:
             self.advance()
 
 
-    # ---------------- MAIN ---------------- #
-
     def run(self):
 
-        # Skip ENTRY
         self.advance()
         self.skip_newlines()
-
 
         while self.current.value != "EXIT":
 
             self.execute_statement()
-            self.skip_newlines()
 
+            self.skip_newlines()
 
         print("✅ Program Finished")
 
 
-    # ---------------- STATEMENTS ---------------- #
-
     def execute_statement(self):
 
-        if self.current.value == "LET":
-            self.execute_let()
-
-        elif self.current.value == "PRINT":
+        if self.current.type == "KEYWORD" and self.current.value == "PRINT":
             self.execute_print()
 
-        elif self.current.value == "IF":
-            self.execute_if()
+        elif self.current.type == "IDENTIFIER":
+            self.execute_assignment()
 
         else:
             self.advance()
 
 
-    # ---------------- LET ---------------- #
+    def execute_assignment(self):
 
-    def execute_let(self):
+        var = self.current.value
+        self.advance()
+        self.advance()
 
-        # LET name = value
+        value = self.evaluate_expression()
 
-        self.advance()  # LET
+        self.variables[var] = value
 
-        var_name = self.current.value
-        self.advance()  # IDENTIFIER
-
-        self.advance()  # =
-
-        value = self.get_value()
-
-        self.variables[var_name] = value
-
-
-    # ---------------- PRINT ---------------- #
 
     def execute_print(self):
 
-        self.advance()  # PRINT
+        self.advance()
+        self.advance()
 
-        value = self.get_value()
+        value = self.evaluate_expression()
+
+        self.advance()
 
         print(value)
 
 
-    # ---------------- IF ---------------- #
+    def evaluate_expression(self):
 
-    def execute_if(self):
+        left = self.evaluate_term()
 
-        self.advance()  # IF
+        while self.current.value in ["+", "-"]:
 
-        result = self.evaluate_condition()
-
-        self.advance()  # ?
-
-        self.skip_newlines()
-
-
-        if result:
-            self.execute_statement()
-        else:
-            self.skip_statement()
-
-
-        self.skip_newlines()
-
-
-        # ELSE / ELSE IF
-        while self.current.value == "ELSE":
-
+            op = self.current.value
             self.advance()
 
-            # ELSE IF
-            if self.current.value != "?":
+            right = self.evaluate_term()
 
-                cond = self.evaluate_condition()
-                self.advance()
-                self.skip_newlines()
+            if op == "+":
+                left = str(left) + str(right) if isinstance(left,str) or isinstance(right,str) else left + right
+            elif op == "-":
+                left = left - right
 
-                if cond:
-                    self.execute_statement()
-                    return
-                else:
-                    self.skip_statement()
-
-            # ELSE
-            else:
-
-                self.advance()
-                self.skip_newlines()
-
-                self.execute_statement()
-                return
+        return left
 
 
-    # ---------------- HELPERS ---------------- #
+    def evaluate_term(self):
 
-    def get_value(self):
+        left = self.evaluate_factor()
+
+        while self.current.value in ["*", "/"]:
+
+            op = self.current.value
+            self.advance()
+
+            right = self.evaluate_factor()
+
+            if op == "*":
+                left = left * right
+            elif op == "/":
+                left = left / right
+
+        return left
+
+
+    def evaluate_factor(self):
 
         token = self.current
 
         if token.type == "NUMBER":
-            value = int(token.value)
+            self.advance()
+
+            if "." in token.value:
+                return float(token.value)
+            else:
+                return int(token.value)
 
         elif token.type == "STRING":
-            value = token.value
+
+            self.advance()
+            return token.value
 
         elif token.type == "IDENTIFIER":
-            value = self.variables.get(token.value, 0)
 
-        else:
-            value = 0
-
-
-        self.advance()
-        return value
-
-
-    def evaluate_condition(self):
-
-        left = self.get_value()
-
-        op = self.current.value
-        self.advance()
-
-        right = self.get_value()
-
-
-        if op == ">":
-            return left > right
-        if op == "<":
-            return left < right
-        if op == "==":
-            return left == right
-        if op == "!=":
-            return left != right
-
-        return False
-
-
-    def skip_statement(self):
-
-        # Skip one statement
-
-        while self.current.type not in ["NEWLINE", "EOF"]:
             self.advance()
+            return self.variables.get(token.value, 0)
+
+        elif token.type == "KEYWORD" and token.value == "INPUT":
+
+            self.advance()
+            self.advance()
+
+            prompt = ""
+
+            if self.current.type == "STRING":
+                prompt = self.current.value
+                self.advance()
+
+            self.advance()
+
+            value = input(prompt)
+
+            try:
+                return int(value)
+            except ValueError:
+                try:
+                    return float(value)
+                except ValueError:
+                    return value
+
+        return 0

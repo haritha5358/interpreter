@@ -12,3 +12,4 @@ tudaruka-continue
 
 entry point -namaskaram
 exit point-nanni
+input-edkuka

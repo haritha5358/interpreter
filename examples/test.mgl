@@ -1,14 +1,10 @@
 namaskaram
 
-iduka x = 7
+n1 = edukuka("parayuka number1: ")
+n2 = edukuka("parayuka number2: ")
 
-sathyamano x < 3 ?
-    ezhutuka "Big"
+sum = n1 + n2
 
-athava x < 5 ?
-    ezhutuka "Medium"
-
-athava ?
-    ezhutuka "Small"
+ezhutuka("thuka: " + sum)
 
 nanni
