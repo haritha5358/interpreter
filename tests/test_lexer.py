@@ -145,3 +145,24 @@ def test_full_statement():
     assert tokens[1].value == "("
     assert tokens[2].value == "hello"
     assert tokens[3].value == ")"
+
+
+def test_array_tokens():
+
+    code = """
+namaskaram
+a = [1,2,3]
+nanni
+"""
+
+    lexer = Lexer(code)
+    tokens = lexer.tokenize()
+
+    values = [t.value for t in tokens]
+
+    assert "[" in values
+    assert "]" in values
+    assert "," in values
+    assert "1" in values
+    assert "2" in values
+    assert "3" in values

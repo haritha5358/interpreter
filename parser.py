@@ -122,11 +122,42 @@ class Parser:
 
             self.eat("OPERATOR", ")")
 
+    # ARRAY SUPPORT
+        elif self.current.type == "OPERATOR" and self.current.value == "[":
+
+            self.eat("OPERATOR", "[")
+
+        # first element
+            if self.current.type in ["NUMBER", "STRING", "IDENTIFIER"]:
+                self.factor()
+
+        # remaining elements
+            while self.current.type == "OPERATOR" and self.current.value == ",":
+                self.eat("OPERATOR", ",")
+                self.factor()
+
+            self.eat("OPERATOR", "]")
+
         else:
             self.error("Invalid expression")
-
 
     def skip_newlines(self):
 
         while self.current.type == "NEWLINE":
             self.advance()
+
+    def parse_array(self):
+        elements = []
+
+        self.eat("LBRACKET")
+
+        if self.current.type != "RBRACKET":
+            elements.append(self.expression())
+
+        while self.current.type == "COMMA":
+            self.eat("COMMA")
+            elements.append(self.expression())
+
+        self.eat("RBRACKET")
+
+        return ("ARRAY", elements)

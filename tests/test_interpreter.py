@@ -189,3 +189,17 @@ nanni
     output = run_program(code, ["5", "7"], monkeypatch, capsys)
 
     assert "sum:12" in output
+
+
+def test_array_print(monkeypatch, capsys):
+
+    code = """
+namaskaram
+a = [1,2,3]
+ezhutuka(a)
+nanni
+"""
+
+    output = run_program(code, [], monkeypatch, capsys)
+
+    assert "[1, 2, 3]" in output

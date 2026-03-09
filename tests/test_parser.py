@@ -146,3 +146,39 @@ nanni
 
     with pytest.raises(ParserError):
         parse_code(code)
+
+
+def test_function_call():
+
+    code = """
+namaskaram
+
+pravarthanam add(a, b)
+    phalam a + b
+avasanam
+
+x = add(5, 3)
+ezhutuka(x)
+
+nanni
+   """
+    with pytest.raises(ParserError):
+        parse_code(code)
+    
+
+def test_array_parsing():
+
+    code = """
+namaskaram
+a = [1,2,3]
+ezhutuka(a)
+nanni
+"""
+
+    lexer = Lexer(code)
+    tokens = lexer.tokenize()
+
+    parser = Parser(tokens)
+
+    # should not raise error
+    parser.parse()

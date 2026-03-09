@@ -54,7 +54,7 @@ class Lexer:
 
             temp_line = re.sub(string_pattern, "STRING", line)
 
-            words = re.findall(r'\d+\.\d+|\w+|==|!=|>=|<=|[()+\-*/=><]', temp_line)
+            words = re.findall(r'\d+\.\d+|\w+|==|!=|>=|<=|[()\[\],+\-*/=><]', temp_line)
 
             string_index = 0
 
@@ -73,6 +73,16 @@ class Lexer:
 
                 elif word.isdigit():
                     self.tokens.append(Token(TOKEN_NUMBER, word))
+
+                elif word == "[":
+                    self.tokens.append(Token(TOKEN_OPERATOR, "["))
+
+                elif word == "]":
+                    self.tokens.append(Token(TOKEN_OPERATOR, "]"))
+
+                elif word == ",":
+                    self.tokens.append(Token(TOKEN_OPERATOR, ","))
+
                 elif word in OPERATORS:
                     self.tokens.append(Token(TOKEN_OPERATOR, word))
 

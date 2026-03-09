@@ -8,7 +8,6 @@ class Interpreter:
 
         self.variables = {}
 
-
     def advance(self):
 
         self.pos += 1
@@ -16,12 +15,10 @@ class Interpreter:
         if self.pos < len(self.tokens):
             self.current = self.tokens[self.pos]
 
-
     def skip_newlines(self):
 
         while self.current.type == "NEWLINE":
             self.advance()
-
 
     def run(self):
 
@@ -36,7 +33,6 @@ class Interpreter:
 
         print("✅ Program Finished")
 
-
     def execute_statement(self):
 
         if self.current.type == "KEYWORD" and self.current.value == "PRINT":
@@ -48,29 +44,26 @@ class Interpreter:
         else:
             self.advance()
 
-
     def execute_assignment(self):
 
         var = self.current.value
-        self.advance()
-        self.advance()
+        self.advance()   # variable
+        self.advance()   # =
 
         value = self.evaluate_expression()
 
         self.variables[var] = value
 
-
     def execute_print(self):
 
-        self.advance()
-        self.advance()
+        self.advance()   # PRINT
+        self.advance()   # (
 
         value = self.evaluate_expression()
 
-        self.advance()
+        self.advance()   # )
 
         print(value)
-
 
     def evaluate_expression(self):
 
@@ -84,12 +77,15 @@ class Interpreter:
             right = self.evaluate_term()
 
             if op == "+":
-                left = str(left) + str(right) if isinstance(left,str) or isinstance(right,str) else left + right
+                if isinstance(left, str) or isinstance(right, str):
+                    left = str(left) + str(right)
+                else:
+                    left = left + right
+
             elif op == "-":
                 left = left - right
 
         return left
-
 
     def evaluate_term(self):
 
@@ -104,17 +100,19 @@ class Interpreter:
 
             if op == "*":
                 left = left * right
+
             elif op == "/":
                 left = left / right
 
         return left
 
-
     def evaluate_factor(self):
 
         token = self.current
 
+        # NUMBER
         if token.type == "NUMBER":
+
             self.advance()
 
             if "." in token.value:
@@ -122,20 +120,23 @@ class Interpreter:
             else:
                 return int(token.value)
 
+        # STRING
         elif token.type == "STRING":
 
             self.advance()
             return token.value
 
+        # VARIABLE
         elif token.type == "IDENTIFIER":
 
             self.advance()
             return self.variables.get(token.value, 0)
 
+        # INPUT
         elif token.type == "KEYWORD" and token.value == "INPUT":
 
-            self.advance()
-            self.advance()
+            self.advance()   # INPUT
+            self.advance()   # (
 
             prompt = ""
 
@@ -143,7 +144,7 @@ class Interpreter:
                 prompt = self.current.value
                 self.advance()
 
-            self.advance()
+            self.advance()   # )
 
             value = input(prompt)
 
@@ -154,5 +155,23 @@ class Interpreter:
                     return float(value)
                 except ValueError:
                     return value
+
+        # ARRAY SUPPORT
+        elif token.type == "OPERATOR" and token.value == "[":
+
+            arr = []
+            self.advance()  # skip [
+
+            while not (self.current.type == "OPERATOR" and self.current.value == "]"):
+
+                value = self.evaluate_expression()
+                arr.append(value)
+
+                if self.current.type == "OPERATOR" and self.current.value == ",":
+                    self.advance()
+
+            self.advance()  # skip ]
+
+            return arr
 
         return 0
